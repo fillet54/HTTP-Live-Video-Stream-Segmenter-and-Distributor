@@ -24,10 +24,11 @@ require 'open3'
 
 class HSEncoder
 
-  def initialize(log, config, hs_transfer)
+  def initialize(log, config, hs_transfer, input_file)
     @hs_transfer = hs_transfer
     @log = log
     @config = config
+    @input_file = input_file
   end
 
   def start_encoding (encoding_threads)
@@ -51,7 +52,7 @@ class HSEncoder
   private 
 
   def process_master_encoding(encoding_pipes)
-    command = @config['source_command'] % @config['input_location']
+    command = @config['source_command'] % @input_file
 
     @log.debug("Executing: #{command}")
 
@@ -175,7 +176,7 @@ class HSEncoder
     encoding_threads << Thread.new do
       @log.info('Encoding thread started');
 
-      process_encoding(@config['encoding_profile'], @config['input_location'], nil)
+      process_encoding(@config['encoding_profile'], @input_file, nil)
   
       @log.info('Encoding thread terminated');
     end
