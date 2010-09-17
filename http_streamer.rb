@@ -46,22 +46,23 @@ log = HSConfig::log_setup( config )
 log.info('HTTP Streamer started')
 
 #Look for a new file name
-# 
-#
 pipe = File.open("/home/xbmc/streamPipe", "r+")
 
-line = pipe.readLine
-
-log.info("LINE READ: #{line}")
+line = "NO_QUIT"
 while line != "QUIT"
-	
-	if File.new(line).exists?
-		config['input_location'] = line
+
+	log.info("WAITING ON PIPE")
+	line = pipe.gets.chop
+	log.info("LINE READ: #{line}")
+
+	if !File.exists?(line)
+		log.info("FILE DOES NOT EXIST: \"#{line}\"")
+		next
 	end
 		
 	hstransfer = HSTransfer::init_and_start_transfer_thread( log, config )
 
-	hsencoder = HSEncoder.new(log, config, hstransfer)
+	hsencoder = HSEncoder.new(log, config, hstransfer, line)
 
 	# Keep reference to the ecoding threads so we can join
 	# and possible kill if necessary
