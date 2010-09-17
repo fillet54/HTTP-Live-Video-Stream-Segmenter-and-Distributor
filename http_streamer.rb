@@ -45,20 +45,39 @@ log = HSConfig::log_setup( config )
 
 log.info('HTTP Streamer started')
 
-hstransfer = HSTransfer::init_and_start_transfer_thread( log, config )
+#Look for a new file name
+# 
+#
+pipe = File.open("/home/xbmc/streamPipe", "r+")
 
-hsencoder = HSEncoder.new(log, config, hstransfer)
+line = pipe.readLine
 
-# Keep reference to the ecoding threads so we can join
-# and possible kill if necessary
-encoding_threads = []
-hsencoder.start_encoding (encoding_threads)
+log.info("LINE READ: #{line}")
+while line != "QUIT"
+	
+	if File.new(line).exists?
+		config['input_location'] = line
+	end
+		
+	hstransfer = HSTransfer::init_and_start_transfer_thread( log, config )
 
-# Joined here in case all threads exit
-encoding_threads.each do |encoding_thread|
-      encoding_thread.join
+	hsencoder = HSEncoder.new(log, config, hstransfer)
+
+	# Keep reference to the ecoding threads so we can join
+	# and possible kill if necessary
+	encoding_threads = []
+	hsencoder.start_encoding (encoding_threads)
+
+	# Joined here in case all threads exit
+	encoding_threads.each do |encoding_thread|
+		encoding_thread.join
+	end
+
+	hstransfer.stop_transfer_thread
+
+	log.info('HTTP Streamer terminated')
+
+	line = pipe.readLine
+	log.info("LINE READ: #{line}")
+
 end
-
-hstransfer.stop_transfer_thread
-
-log.info('HTTP Streamer terminated')
