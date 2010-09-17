@@ -19,6 +19,7 @@
 require 'hs_transfer'
 require 'hs_config'
 require 'hs_encoder'
+require 'fileutils'
 
 # **************************************************************
 #
@@ -53,6 +54,15 @@ while true
 	log.info("WAITING ON PIPE")
 	line = pipe.gets.chop
 	log.info("LINE READ: #{line}")
+
+	# Delete all old files 
+	dir = config['copy_dev']['directory']
+	Dir.foreach(dir) do |f|
+		if f == '.' or f == '..' then next
+		elsif File.directory?(f) then FileUtils.rm_rf(f)
+		else FileUtils.rm(f)
+		end
+	end
 
 	hsencoder.stop_encoding if !hsencoder.nil?
 	
