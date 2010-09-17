@@ -48,18 +48,21 @@ log.info('HTTP Streamer started')
 #Look for a new file name
 pipe = File.open("/home/xbmc/streamPipe", "r+")
 
-line = "NO_QUIT"
-while line != "QUIT"
+while true 
 
 	log.info("WAITING ON PIPE")
 	line = pipe.gets.chop
 	log.info("LINE READ: #{line}")
 
-	if !File.exists?(line)
-		log.info("FILE DOES NOT EXIST: \"#{line}\"")
-		next
-	end
-		
+	hsencoder.stop_encoding if !hsencoder.nil?
+	
+	break if line == "QUIT"
+
+	#if !File.exists?(line)
+	#	log.info("FILE DOES NOT EXIST: \"#{line}\"")
+	#	next
+	#end
+
 	hstransfer = HSTransfer::init_and_start_transfer_thread( log, config )
 
 	hsencoder = HSEncoder.new(log, config, hstransfer, line)
@@ -69,16 +72,25 @@ while line != "QUIT"
 	encoding_threads = []
 	hsencoder.start_encoding (encoding_threads)
 
+	# Now wait for the fd to not be blocking	
+	#pipeWatcher = Thread.new {
+	#        log.info("STARTING WATCHER")	
+	#	rb_io_wait_readable(pipe)
+	#	log.info("WATCHING WOKEUP")
+	#	hsencoder.stop_encoding
+	#}
+
 	# Joined here in case all threads exit
-	encoding_threads.each do |encoding_thread|
-		encoding_thread.join
-	end
+	#encoding_threads.each do |encoding_thread|
+	#	encoding_thread.join
+	#end
 
 	hstransfer.stop_transfer_thread
 
 	log.info('HTTP Streamer terminated')
 
-	line = pipe.readLine
-	log.info("LINE READ: #{line}")
-
 end
+
+hsencoder.stop_encoding if !hsencoder.nil?
+hstransfer.stop_transfer_thread if !hstransfer.nil?
+
