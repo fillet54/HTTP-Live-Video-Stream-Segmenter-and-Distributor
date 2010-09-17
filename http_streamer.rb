@@ -48,7 +48,16 @@ log.info('HTTP Streamer started')
 hstransfer = HSTransfer::init_and_start_transfer_thread( log, config )
 
 hsencoder = HSEncoder.new(log, config, hstransfer)
-hsencoder.start_encoding
+
+# Keep reference to the ecoding threads so we can join
+# and possible kill if necessary
+encoding_threads = []
+hsencoder.start_encoding (encoding_threads)
+
+# Joined here in case all threads exit
+encoding_threads.each do |encoding_thread|
+      encoding_thread.join
+end
 
 hstransfer.stop_transfer_thread
 

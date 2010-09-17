@@ -30,8 +30,7 @@ class HSEncoder
     @config = config
   end
 
-  def start_encoding
-    encoding_threads = []
+  def start_encoding (encoding_threads)
 
     if @config['encoding_profile'].is_a?(Array)
       run_multirate_encoding( encoding_threads )
@@ -39,9 +38,6 @@ class HSEncoder
       run_single_encoder( encoding_threads )
     end
 
-    encoding_threads.each do |encoding_thread|
-      encoding_thread.join
-    end
   end
 
   def stop_encoding
